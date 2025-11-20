@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
 import 'pages/about_page.dart';
+import 'pages/collections_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomePage(),
         '/about': (context) => const AboutPage(),
-        '/collections': (context) => const PlaceholderPage(title: 'Collections'),
+        '/collections': (context) => const CollectionsPage(),
         '/sale': (context) => const PlaceholderPage(title: 'Sale'),
         '/account': (context) => const PlaceholderPage(title: 'Account'),
         '/cart': (context) => const PlaceholderPage(title: 'Cart'),
