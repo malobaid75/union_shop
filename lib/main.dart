@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'widgets/navbar.dart';
 import 'widgets/mobile_drawer.dart';
-
+import 'widgets/footer.dart';
 
 void main() {
   runApp(const MyApp());
