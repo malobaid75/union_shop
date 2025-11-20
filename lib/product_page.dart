@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:union_shop/widgets/navbar.dart';
 
 class ProductPage extends StatelessWidget {
   const ProductPage({super.key});
@@ -14,6 +15,7 @@ class ProductPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const Navbar(),
       body: SingleChildScrollView(
         child: Column(
           children: [
