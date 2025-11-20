@@ -22,23 +22,26 @@ class MobileDrawer extends StatelessWidget {
               ),
             ),
           ),
-          _buildDrawerItem(Icons.home, 'Home', () {}),
-          _buildDrawerItem(Icons.collections, 'Collections', () {}),
-          _buildDrawerItem(Icons.local_offer, 'Sale', () {}),
-          _buildDrawerItem(Icons.info, 'About Us', () {}),
+          _buildDrawerItem(context, Icons.home, 'Home', '/'),
+          _buildDrawerItem(context, Icons.collections, 'Collections', '/collections'),
+          _buildDrawerItem(context, Icons.local_offer, 'Sale', '/sale'),
+          _buildDrawerItem(context, Icons.info, 'About Us', '/about'),
           const Divider(),
-          _buildDrawerItem(Icons.person, 'Account', () {}),
-          _buildDrawerItem(Icons.shopping_cart, 'Cart', () {}),
+          _buildDrawerItem(context, Icons.person, 'Account', '/account'),
+          _buildDrawerItem(context, Icons.shopping_cart, 'Cart', '/cart'),
         ],
       ),
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap) {
+  Widget _buildDrawerItem(BuildContext context, IconData icon, String title, String route) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
-      onTap: onTap,
+      onTap: () {
+        Navigator.pop(context); // Close drawer
+        Navigator.pushReplacementNamed(context, route);
+      },
     );
   }
 }

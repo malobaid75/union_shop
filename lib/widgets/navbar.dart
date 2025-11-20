@@ -48,21 +48,26 @@ class Navbar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             children: [
-              const Text(
-                'UNION SHOP',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              InkWell(
+                onTap: () {
+                  Navigator.pushReplacementNamed(context, '/');
+                },
+                child: const Text(
+                  'UNION SHOP',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(width: 40),
               Expanded(
                 child: Row(
                   children: [
-                    _buildNavLink('Home'),
-                    _buildNavLink('Collections'),
-                    _buildNavLink('Sale'),
-                    _buildNavLink('About Us'),
+                    _buildNavLink(context, 'Home', '/'),
+                    _buildNavLink(context, 'Collections', '/collections'),
+                    _buildNavLink(context, 'Sale', '/sale'),
+                    _buildNavLink(context, 'About Us', '/about'),
                   ],
                 ),
               ),
@@ -89,11 +94,13 @@ class Navbar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavLink(String title) {
+  Widget _buildNavLink(BuildContext context, String title, String route) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushReplacementNamed(context, route);
+        },
         child: Text(
           title,
           style: const TextStyle(
