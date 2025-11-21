@@ -416,7 +416,9 @@ class _CollectionPageState extends State<CollectionPage> {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.pushNamed(context, '/product', arguments: product['name']);
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

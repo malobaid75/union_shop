@@ -3,6 +3,7 @@ import 'pages/home_page.dart';
 import 'pages/about_page.dart';
 import 'pages/collections_page.dart';
 import 'pages/collection_page.dart';
+import 'pages/product_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,6 +37,12 @@ class MyApp extends StatelessWidget {
             builder: (context) => CollectionPage(collectionName: collectionName),
           );
         }
+        if (settings.name == '/product') {
+          final productId = settings.arguments as String?;
+          return MaterialPageRoute(
+            builder: (context) => ProductPage(productId: productId),
+          );
+        }
         return null;
       },
     );
@@ -44,7 +51,7 @@ class MyApp extends StatelessWidget {
 
 class PlaceholderPage extends StatelessWidget {
   final String title;
-  
+
   const PlaceholderPage({super.key, required this.title});
 
   @override
