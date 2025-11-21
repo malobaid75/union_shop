@@ -152,6 +152,7 @@ class CollectionsPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final collection = collections[index];
               return _buildCollectionCard(
+                context,
                 collection['name'] as String,
                 collection['description'] as String,
                 collection['itemCount'] as String,
@@ -166,6 +167,7 @@ class CollectionsPage extends StatelessWidget {
   }
 
   Widget _buildCollectionCard(
+    BuildContext context,
     String name,
     String description,
     String itemCount,
@@ -179,7 +181,13 @@ class CollectionsPage extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            '/collection',
+            arguments: name,
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

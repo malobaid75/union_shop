@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
 import 'pages/about_page.dart';
 import 'pages/collections_page.dart';
+import 'pages/collection_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,11 +29,19 @@ class MyApp extends StatelessWidget {
         '/account': (context) => const PlaceholderPage(title: 'Account'),
         '/cart': (context) => const PlaceholderPage(title: 'Cart'),
       },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/collection') {
+          final collectionName = settings.arguments as String? ?? 'Collection';
+          return MaterialPageRoute(
+            builder: (context) => CollectionPage(collectionName: collectionName),
+          );
+        }
+        return null;
+      },
     );
   }
 }
 
-// Temporary placeholder page for routes not yet implemented
 class PlaceholderPage extends StatelessWidget {
   final String title;
   
