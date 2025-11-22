@@ -4,6 +4,7 @@ import 'pages/about_page.dart';
 import 'pages/collections_page.dart';
 import 'pages/collection_page.dart';
 import 'pages/product_page.dart';
+import 'pages/sale_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const HomePage(),
         '/about': (context) => const AboutPage(),
         '/collections': (context) => const CollectionsPage(),
-        '/sale': (context) => const PlaceholderPage(title: 'Sale'),
+        '/sale': (context) => const SalePage(),
         '/account': (context) => const PlaceholderPage(title: 'Account'),
         '/cart': (context) => const PlaceholderPage(title: 'Cart'),
       },
