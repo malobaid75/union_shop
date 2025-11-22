@@ -79,7 +79,9 @@ class Navbar extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.person),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/auth');
+                    },
                   ),
                   IconButton(
                     icon: const Icon(Icons.shopping_cart),

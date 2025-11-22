@@ -5,6 +5,7 @@ import 'pages/collections_page.dart';
 import 'pages/collection_page.dart';
 import 'pages/product_page.dart';
 import 'pages/sale_page.dart';
+import 'pages/auth_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +29,8 @@ class MyApp extends StatelessWidget {
         '/about': (context) => const AboutPage(),
         '/collections': (context) => const CollectionsPage(),
         '/sale': (context) => const SalePage(),
-        '/account': (context) => const PlaceholderPage(title: 'Account'),
+        '/auth': (context) => const AuthPage(),
+        '/account': (context) => const AuthPage(),
         '/cart': (context) => const PlaceholderPage(title: 'Cart'),
       },
       onGenerateRoute: (settings) {
