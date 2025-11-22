@@ -460,26 +460,7 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
       ),
     );
   }
-
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Colors.grey.shade300)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Text(
-            'OR',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: Colors.grey.shade300)),
-      ],
-    );
-  }
-
+  
   Widget _buildBackToShop() {
     return TextButton.icon(
       onPressed: () {
