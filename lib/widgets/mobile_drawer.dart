@@ -1,46 +1,163 @@
 import 'package:flutter/material.dart';
+import '../services/cart_service.dart';
 
 class MobileDrawer extends StatelessWidget {
   const MobileDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cartService = CartService();
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blue.shade700,
-            ),
-            child: const Text(
-              'UNION SHOP',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade700, Colors.blue.shade500],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.shopping_bag,
+                    color: Colors.blue.shade700,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'UNION SHOP',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'University Merchandise',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
+          _buildDrawerSection('SHOP'),
           _buildDrawerItem(context, Icons.home, 'Home', '/'),
           _buildDrawerItem(context, Icons.collections, 'Collections', '/collections'),
           _buildDrawerItem(context, Icons.local_offer, 'Sale', '/sale'),
-          _buildDrawerItem(context, Icons.info, 'About Us', '/about'),
+          _buildDrawerItem(context, Icons.print, 'Print Shack', '/print-shack'),
           const Divider(),
-          _buildDrawerItem(context, Icons.person, 'Account', '/account'),
-          _buildDrawerItem(context, Icons.shopping_cart, 'Cart', '/cart'),
+          _buildDrawerSection('INFORMATION'),
+          _buildDrawerItem(context, Icons.info, 'About Us', '/about'),
+          _buildDrawerItem(context, Icons.help_outline, 'Help Center', '/help'),
+          _buildDrawerItem(context, Icons.local_shipping, 'Shipping Info', '/shipping'),
+          _buildDrawerItem(context, Icons.assignment_return, 'Returns', '/returns'),
+          const Divider(),
+          _buildDrawerSection('ACCOUNT'),
+          _buildDrawerItem(context, Icons.search, 'Search', '/search'),
+          _buildDrawerItem(context, Icons.person, 'Sign In / Register', '/auth'),
+          _buildCartItem(context, cartService),
         ],
       ),
     );
   }
 
+  Widget _buildDrawerSection(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade600,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
   Widget _buildDrawerItem(BuildContext context, IconData icon, String title, String route) {
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final isActive = currentRoute == route;
+
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
+      leading: Icon(
+        icon,
+        color: isActive ? Colors.blue.shade700 : Colors.grey.shade700,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isActive ? Colors.blue.shade700 : Colors.black,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      selected: isActive,
+      selectedTileColor: Colors.blue.shade50,
       onTap: () {
-        Navigator.pop(context); // Close drawer
-        Navigator.pushReplacementNamed(context, route);
+        Navigator.pop(context); // Close drawer first
+        if (currentRoute != route) {
+          Navigator.pushNamed(context, route);
+        }
+      },
+    );
+  }
+
+  Widget _buildCartItem(BuildContext context, CartService cartService) {
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final isActive = currentRoute == '/cart';
+
+    return ListTile(
+      leading: Icon(
+        Icons.shopping_cart,
+        color: isActive ? Colors.blue.shade700 : Colors.grey.shade700,
+      ),
+      title: Text(
+        'Shopping Cart',
+        style: TextStyle(
+          color: isActive ? Colors.blue.shade700 : Colors.black,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      trailing: cartService.itemCount > 0
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${cartService.itemCount}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
+      selected: isActive,
+      selectedTileColor: Colors.blue.shade50,
+      onTap: () {
+        Navigator.pop(context); // Close drawer first
+        if (currentRoute != '/cart') {
+          Navigator.pushNamed(context, '/cart');
+        }
       },
     );
   }

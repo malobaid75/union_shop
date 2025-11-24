@@ -11,91 +11,98 @@ class Footer extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 768) {
-            // Mobile layout
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildFooterSection('SHOP', [
-                  'All Products',
-                  'Collections',
-                  'Sale Items',
-                  'New Arrivals',
-                ]),
-                const SizedBox(height: 30),
-                _buildFooterSection('INFORMATION', [
-                  'About Us',
-                  'Contact Us',
-                  'Privacy Policy',
-                  'Terms & Conditions',
-                ]),
-                const SizedBox(height: 30),
-                _buildFooterSection('CUSTOMER SERVICE', [
-                  'Help Center',
-                  'Track Order',
-                  'Returns',
-                  'Shipping Info',
-                ]),
-                const SizedBox(height: 30),
-                _buildContactSection(),
-                const SizedBox(height: 30),
-                _buildSocialMedia(),
-                const SizedBox(height: 20),
-                const Divider(color: Colors.grey),
-                const SizedBox(height: 20),
-                _buildCopyright(),
-              ],
-            );
+            return _buildMobileFooter(context);
           } else {
-            // Desktop layout
-            return Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _buildFooterSection('SHOP', [
-                        'All Products',
-                        'Collections',
-                        'Sale Items',
-                        'New Arrivals',
-                      ]),
-                    ),
-                    Expanded(
-                      child: _buildFooterSection('INFORMATION', [
-                        'About Us',
-                        'Contact Us',
-                        'Privacy Policy',
-                        'Terms & Conditions',
-                      ]),
-                    ),
-                    Expanded(
-                      child: _buildFooterSection('CUSTOMER SERVICE', [
-                        'Help Center',
-                        'Track Order',
-                        'Returns',
-                        'Shipping Info',
-                      ]),
-                    ),
-                    Expanded(
-                      child: _buildContactSection(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                _buildSocialMedia(),
-                const SizedBox(height: 20),
-                const Divider(color: Colors.grey),
-                const SizedBox(height: 20),
-                _buildCopyright(),
-              ],
-            );
+            return _buildDesktopFooter(context);
           }
         },
       ),
     );
   }
 
-  Widget _buildFooterSection(String title, List<String> links) {
+  Widget _buildMobileFooter(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFooterSection(context, 'SHOP', [
+          {'title': 'All Collections', 'route': '/collections'},
+          {'title': 'Clothing', 'route': '/collection', 'args': 'Clothing'},
+          {'title': 'Accessories', 'route': '/collection', 'args': 'Accessories'},
+          {'title': 'Sale Items', 'route': '/sale'},
+        ]),
+        const SizedBox(height: 30),
+        _buildFooterSection(context, 'INFORMATION', [
+          {'title': 'About Us', 'route': '/about'},
+          {'title': 'Contact Us', 'route': '/contact'},
+          {'title': 'Privacy Policy', 'route': '/privacy'},
+          {'title': 'Terms & Conditions', 'route': '/terms'},
+        ]),
+        const SizedBox(height: 30),
+        _buildFooterSection(context, 'CUSTOMER SERVICE', [
+          {'title': 'Help Center', 'route': '/help'},
+          {'title': 'Track Order', 'route': '/track-order'},
+          {'title': 'Returns', 'route': '/returns'},
+          {'title': 'Shipping Info', 'route': '/shipping'},
+        ]),
+        const SizedBox(height: 30),
+        _buildContactSection(),
+        const SizedBox(height: 30),
+        _buildSearchBar(context),
+        const SizedBox(height: 30),
+        _buildSocialMedia(),
+        const SizedBox(height: 20),
+        const Divider(color: Colors.grey),
+        const SizedBox(height: 20),
+        _buildCopyright(),
+      ],
+    );
+  }
+
+  Widget _buildDesktopFooter(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildFooterSection(context, 'SHOP', [
+                {'title': 'All Collections', 'route': '/collections'},
+                {'title': 'Clothing', 'route': '/collection', 'args': 'Clothing'},
+                {'title': 'Accessories', 'route': '/collection', 'args': 'Accessories'},
+                {'title': 'Sale Items', 'route': '/sale'},
+              ]),
+            ),
+            Expanded(
+              child: _buildFooterSection(context, 'INFORMATION', [
+                {'title': 'About Us', 'route': '/about'},
+                {'title': 'Contact Us', 'route': '/contact'},
+                {'title': 'Privacy Policy', 'route': '/privacy'},
+                {'title': 'Terms & Conditions', 'route': '/terms'},
+              ]),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildContactSection(),
+                  const SizedBox(height: 20),
+                  _buildSearchBar(context),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 30),
+        _buildSocialMedia(),
+        const SizedBox(height: 20),
+        const Divider(color: Colors.grey),
+        const SizedBox(height: 20),
+        _buildCopyright(),
+      ],
+    );
+  }
+
+  Widget _buildFooterSection(BuildContext context, String title, List<Map<String, dynamic>> links) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -109,11 +116,21 @@ class Footer extends StatelessWidget {
         ),
         const SizedBox(height: 15),
         ...links.map((link) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 10),
               child: InkWell(
-                onTap: () {},
+                onTap: () {
+                  if (link['args'] != null) {
+                    Navigator.pushNamed(
+                      context,
+                      link['route'],
+                      arguments: link['args'],
+                    );
+                  } else {
+                    Navigator.pushNamed(context, link['route']);
+                  }
+                },
                 child: Text(
-                  link,
+                  link['title'],
                   style: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
@@ -138,27 +155,81 @@ class Footer extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 15),
-        Text(
-          'Email: shop@upsu.net',
-          style: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 14,
+        _buildContactItem(Icons.email, 'shop@upsu.net'),
+        const SizedBox(height: 8),
+        _buildContactItem(Icons.phone, '+44 23 9284 3000'),
+        const SizedBox(height: 8),
+        _buildContactItem(Icons.location_on, 'University of Portsmouth\nStudents\' Union'),
+      ],
+    );
+  }
+
+  Widget _buildContactItem(IconData icon, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: Colors.grey.shade400,
+          size: 18,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 14,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Phone: +44 23 9284 3000',
+      ],
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'SEARCH',
           style: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 14,
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'University of Portsmouth\nStudent Union',
-          style: TextStyle(
-            color: Colors.grey.shade400,
-            fontSize: 14,
+        const SizedBox(height: 15),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Search products...',
+                    hintStyle: TextStyle(color: Colors.grey.shade500),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+                  ),
+                  onSubmitted: (value) {
+                    if (value.isNotEmpty) {
+                      Navigator.pushNamed(context, '/search', arguments: value);
+                    }
+                  },
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/search');
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -166,47 +237,92 @@ class Footer extends StatelessWidget {
   }
 
   Widget _buildSocialMedia() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
       children: [
-        _buildSocialIcon(Icons.facebook),
-        const SizedBox(width: 15),
-        _buildSocialIcon(Icons.camera_alt), // Instagram
-        const SizedBox(width: 15),
-        _buildSocialIcon(Icons.chat), // Twitter/X
-        const SizedBox(width: 15),
-        _buildSocialIcon(Icons.video_library), // YouTube
+        const Text(
+          'FOLLOW US',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSocialIcon(Icons.facebook, 'Facebook'),
+            const SizedBox(width: 15),
+            _buildSocialIcon(Icons.camera_alt, 'Instagram'),
+            const SizedBox(width: 15),
+            _buildSocialIcon(Icons.close, 'X (Twitter)'),
+            const SizedBox(width: 15),
+            _buildSocialIcon(Icons.video_library, 'YouTube'),
+            const SizedBox(width: 15),
+            _buildSocialIcon(Icons.link, 'LinkedIn'),
+          ],
+        ),
       ],
     );
   }
 
-  Widget _buildSocialIcon(IconData icon) {
-    return InkWell(
-      onTap: () {},
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade800,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
+  Widget _buildSocialIcon(IconData icon, String tooltip) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildCopyright() {
-    return Center(
+    return Column(
+      children: [
+        Text(
+          '© 2025 University of Portsmouth Students\' Union. All rights reserved.',
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 12,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildFooterLink('Privacy Policy'),
+            const Text(' | ', style: TextStyle(color: Colors.grey)),
+            _buildFooterLink('Terms of Service'),
+            const Text(' | ', style: TextStyle(color: Colors.grey)),
+            _buildFooterLink('Cookie Policy'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooterLink(String text) {
+    return InkWell(
+      onTap: () {},
       child: Text(
-        '© 2025 University of Portsmouth Students\' Union. All rights reserved.',
+        text,
         style: TextStyle(
-          color: Colors.grey.shade600,
+          color: Colors.grey.shade500,
           fontSize: 12,
         ),
-        textAlign: TextAlign.center,
       ),
     );
   }
