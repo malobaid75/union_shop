@@ -120,43 +120,48 @@ class Navbar extends StatelessWidget {
     );
   }
 
-  Widget _buildCartIcon(BuildContext context, CartService cartService) {
-    return Stack(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.shopping_cart, color: Colors.black),
-          onPressed: () => _navigateTo(context, '/cart'),
-          tooltip: 'Cart',
-        ),
-        if (cartService.itemCount > 0)
-          Positioned(
-            right: 4,
-            top: 4,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              constraints: const BoxConstraints(
-                minWidth: 18,
-                minHeight: 18,
-              ),
-              child: Text(
-                '${cartService.itemCount}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+ Widget _buildCartIcon(BuildContext context, CartService cartService) {
+  return AnimatedBuilder(
+    animation: cartService,
+    builder: (context, child) {
+      return Stack(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart, color: Colors.black),
+            onPressed: () => _navigateTo(context, '/cart'),
+            tooltip: 'Cart',
+          ),
+          if (cartService.itemCount > 0)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
                 ),
-                textAlign: TextAlign.center,
+                constraints: const BoxConstraints(
+                  minWidth: 18,
+                  minHeight: 18,
+                ),
+                child: Text(
+                  '${cartService.itemCount}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
-          ),
-      ],
-    );
+        ],
+      );
+    },
+  );
   }
-
+  
   void _navigateTo(BuildContext context, String route) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     if (currentRoute != route) {

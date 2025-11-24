@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:union_shop/services/cart_service.dart';
 import '../widgets/navbar.dart';
 import '../widgets/mobile_drawer.dart';
 import '../widgets/footer.dart';
@@ -715,54 +716,62 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  Widget _buildAddToCartButton() {
-    final canAddToCart = _product!.inStock &&
-        (_product!.sizes.isEmpty || _selectedSize != null) &&
-        (_product!.colors.isEmpty || _selectedColor != null);
+ Widget _buildAddToCartButton() {
+  final canAddToCart = _product!.inStock &&
+      (_product!.sizes.isEmpty || _selectedSize != null) &&
+      (_product!.colors.isEmpty || _selectedColor != null);
 
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: canAddToCart
-            ? () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Added ${_quantity}x ${_product!.name} to cart!',
-                    ),
-                    action: SnackBarAction(
-                      label: 'VIEW CART',
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/cart');
-                      },
-                    ),
-                    duration: const Duration(seconds: 3),
+  return SizedBox(
+    width: double.infinity,
+    child: ElevatedButton.icon(
+      onPressed: canAddToCart
+          ? () {
+              final cartService = CartService();
+              cartService.addItem(
+                _product!,
+                _selectedSize ?? 'N/A',
+                _selectedColor ?? 'N/A',
+                quantity: _quantity,
+              );
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Added ${_quantity}x ${_product!.name} to cart!',
                   ),
-                );
-              }
-            : null,
-        icon: const Icon(Icons.shopping_cart),
-        label: Text(
-          canAddToCart ? 'ADD TO CART' : 'SELECT OPTIONS',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canAddToCart ? Colors.blue.shade700 : Colors.grey,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          disabledBackgroundColor: Colors.grey.shade300,
-          disabledForegroundColor: Colors.grey.shade600,
+                  action: SnackBarAction(
+                    label: 'VIEW CART',
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/cart');
+                    },
+                  ),
+                  duration: const Duration(seconds: 3),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          : null,
+      icon: const Icon(Icons.shopping_cart),
+      label: Text(
+        canAddToCart ? 'ADD TO CART' : 'SELECT OPTIONS',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
-
+      style: ElevatedButton.styleFrom(
+        backgroundColor: canAddToCart ? Colors.blue.shade700 : Colors.grey,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        disabledBackgroundColor: Colors.grey.shade300,
+        disabledForegroundColor: Colors.grey.shade600,
+      ),
+    ),
+  );
+}
   Widget _buildBuyNowButton() {
     final canBuyNow = _product!.inStock &&
         (_product!.sizes.isEmpty || _selectedSize != null) &&

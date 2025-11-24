@@ -6,6 +6,7 @@ import 'pages/collection_page.dart';
 import 'pages/product_page.dart';
 import 'pages/sale_page.dart';
 import 'pages/auth_page.dart';
+import 'pages/cart_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,7 +34,7 @@ class MyApp extends StatelessWidget {
         '/sale': (context) => const SalePage(),
         '/auth': (context) => const AuthPage(),
         '/account': (context) => const AuthPage(),
-        '/cart': (context) => const PlaceholderPage(title: 'Cart'),
+        '/cart': (context) => const CartPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/collection') {
