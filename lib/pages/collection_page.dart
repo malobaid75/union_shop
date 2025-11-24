@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../widgets/navbar.dart';
 import '../widgets/mobile_drawer.dart';
 import '../widgets/footer.dart';
+import '../services/data_service.dart';
+import '../models/product.dart';
+import '../models/collection.dart';
 
 class CollectionPage extends StatefulWidget {
   final String collectionName;
@@ -16,72 +19,146 @@ class CollectionPage extends StatefulWidget {
 }
 
 class _CollectionPageState extends State<CollectionPage> {
+  final DataService _dataService = DataService();
+
   String _sortBy = 'Featured';
   String _sizeFilter = 'All Sizes';
   String _colorFilter = 'All Colors';
   String _priceFilter = 'All Prices';
+  int _currentPage = 1;
+  final int _itemsPerPage = 12;
 
-  final List<Map<String, dynamic>> _products = [
-    {
-      'name': 'University Hoodie',
-      'price': 35.00,
-      'originalPrice': 45.00,
-      'image': 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Hoodie',
-      'isOnSale': true,
-    },
-    {
-      'name': 'Campus T-Shirt',
-      'price': 18.00,
-      'originalPrice': null,
-      'image': 'https://via.placeholder.com/300x300/E74C3C/FFFFFF?text=T-Shirt',
-      'isOnSale': false,
-    },
-    {
-      'name': 'Logo Sweatshirt',
-      'price': 32.00,
-      'originalPrice': null,
-      'image': 'https://via.placeholder.com/300x300/27AE60/FFFFFF?text=Sweatshirt',
-      'isOnSale': false,
-    },
-    {
-      'name': 'Varsity Jacket',
-      'price': 55.00,
-      'originalPrice': 70.00,
-      'image': 'https://via.placeholder.com/300x300/8E44AD/FFFFFF?text=Jacket',
-      'isOnSale': true,
-    },
-    {
-      'name': 'Sports Jersey',
-      'price': 28.00,
-      'originalPrice': null,
-      'image': 'https://via.placeholder.com/300x300/F39C12/FFFFFF?text=Jersey',
-      'isOnSale': false,
-    },
-    {
-      'name': 'Polo Shirt',
-      'price': 24.00,
-      'originalPrice': null,
-      'image': 'https://via.placeholder.com/300x300/16A085/FFFFFF?text=Polo',
-      'isOnSale': false,
-    },
-    {
-      'name': 'Zip-Up Hoodie',
-      'price': 40.00,
-      'originalPrice': 50.00,
-      'image': 'https://via.placeholder.com/300x300/C0392B/FFFFFF?text=Zip+Hoodie',
-      'isOnSale': true,
-    },
-    {
-      'name': 'Long Sleeve Tee',
-      'price': 22.00,
-      'originalPrice': null,
-      'image': 'https://via.placeholder.com/300x300/2980B9/FFFFFF?text=Long+Sleeve',
-      'isOnSale': false,
-    },
-  ];
+  List<Product> _allProducts = [];
+  List<Product> _filteredProducts = [];
+  Collection? _collection;
+
+  // Get all unique sizes from products
+  List<String> _availableSizes = ['All Sizes'];
+  // Get all unique colors from products
+  List<String> _availableColors = ['All Colors'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  void _loadProducts() {
+    // Get collection
+    _collection = _dataService.getCollectionByName(widget.collectionName);
+
+    if (_collection != null) {
+      // Get products for this collection
+      _allProducts = _dataService.getProductsByCollection(_collection!.id);
+
+      // Extract available sizes and colors
+      Set<String> sizes = {'All Sizes'};
+      Set<String> colors = {'All Colors'};
+
+      for (var product in _allProducts) {
+        sizes.addAll(product.sizes);
+        colors.addAll(product.colors);
+      }
+
+      _availableSizes = sizes.toList();
+      _availableColors = colors.toList();
+
+      _applyFiltersAndSort();
+    }
+  }
+
+  void _applyFiltersAndSort() {
+    _filteredProducts = List.from(_allProducts);
+
+    // Apply size filter
+    if (_sizeFilter != 'All Sizes') {
+      _filteredProducts = _filteredProducts
+          .where((p) => p.sizes.contains(_sizeFilter))
+          .toList();
+    }
+
+    // Apply color filter
+    if (_colorFilter != 'All Colors') {
+      _filteredProducts = _filteredProducts
+          .where((p) => p.colors.contains(_colorFilter))
+          .toList();
+    }
+
+    // Apply price filter
+    if (_priceFilter != 'All Prices') {
+      _filteredProducts = _filteredProducts.where((p) {
+        switch (_priceFilter) {
+          case 'Under £20':
+            return p.price < 20;
+          case '£20 - £40':
+            return p.price >= 20 && p.price <= 40;
+          case '£40 - £60':
+            return p.price > 40 && p.price <= 60;
+          case 'Over £60':
+            return p.price > 60;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
+    // Apply sorting
+    _filteredProducts = _dataService.sortProducts(_filteredProducts, _sortBy);
+
+    // Reset to first page when filters change
+    _currentPage = 1;
+    setState(() {});
+  }
+
+  List<Product> get _paginatedProducts {
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+
+    if (startIndex >= _filteredProducts.length) {
+      return [];
+    }
+
+    return _filteredProducts.sublist(
+      startIndex,
+      endIndex > _filteredProducts.length
+          ? _filteredProducts.length
+          : endIndex,
+    );
+  }
+
+  int get _totalPages {
+    return (_filteredProducts.length / _itemsPerPage).ceil();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_collection == null) {
+      return Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: const Navbar(),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 80, color: Colors.grey),
+              const SizedBox(height: 20),
+              const Text(
+                'Collection not found',
+                style: TextStyle(fontSize: 24, color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Navigator.pushNamed(context, '/collections'),
+                child: const Text('View All Collections'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -96,8 +173,7 @@ class _CollectionPageState extends State<CollectionPage> {
             _buildFiltersSection(),
             _buildResultsInfo(),
             _buildProductsGrid(),
-            const SizedBox(height: 20),
-            _buildPagination(),
+            if (_totalPages > 1) _buildPagination(),
             const SizedBox(height: 40),
             const Footer(),
           ],
@@ -107,12 +183,14 @@ class _CollectionPageState extends State<CollectionPage> {
   }
 
   Widget _buildPageHeader() {
+    final accentColor = _hexToColor(_collection!.colorHex);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade700, Colors.blue.shade400],
+          colors: [accentColor, accentColor.withOpacity(0.7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -120,19 +198,28 @@ class _CollectionPageState extends State<CollectionPage> {
       child: Column(
         children: [
           Text(
-            widget.collectionName.toUpperCase(),
+            _collection!.name.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: 36,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            '${_products.length} products',
+            _collection!.description,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 15),
+          Text(
+            '${_allProducts.length} products available',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 14,
             ),
           ),
         ],
@@ -148,37 +235,24 @@ class _CollectionPageState extends State<CollectionPage> {
       child: Row(
         children: [
           InkWell(
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
-            },
+            onTap: () => Navigator.pushNamed(context, '/'),
             child: Text(
               'Home',
-              style: TextStyle(
-                color: Colors.blue.shade700,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.blue.shade700, fontSize: 14),
             ),
           ),
           const Text(' / ', style: TextStyle(color: Colors.grey)),
           InkWell(
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/collections');
-            },
+            onTap: () => Navigator.pushNamed(context, '/collections'),
             child: Text(
               'Collections',
-              style: TextStyle(
-                color: Colors.blue.shade700,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.blue.shade700, fontSize: 14),
             ),
           ),
           const Text(' / ', style: TextStyle(color: Colors.grey)),
           Text(
-            widget.collectionName,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-            ),
+            _collection!.name,
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
         ],
       ),
@@ -188,42 +262,58 @@ class _CollectionPageState extends State<CollectionPage> {
   Widget _buildFiltersSection() {
     return Container(
       padding: const EdgeInsets.all(20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 768) {
-            return Row(
-              children: [
-                Expanded(child: _buildSortDropdown()),
-                const SizedBox(width: 15),
-                Expanded(child: _buildSizeDropdown()),
-                const SizedBox(width: 15),
-                Expanded(child: _buildColorDropdown()),
-                const SizedBox(width: 15),
-                Expanded(child: _buildPriceDropdown()),
-              ],
-            );
-          } else {
-            return Column(
-              children: [
-                Row(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade200,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 768) {
+                return Row(
                   children: [
                     Expanded(child: _buildSortDropdown()),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 15),
                     Expanded(child: _buildSizeDropdown()),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
+                    const SizedBox(width: 15),
                     Expanded(child: _buildColorDropdown()),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 15),
                     Expanded(child: _buildPriceDropdown()),
                   ],
-                ),
-              ],
-            );
-          }
-        },
+                );
+              } else {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildSortDropdown()),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildSizeDropdown()),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(child: _buildColorDropdown()),
+                        const SizedBox(width: 10),
+                        Expanded(child: _buildPriceDropdown()),
+                      ],
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 15),
+          _buildActiveFilters(),
+        ],
       ),
     );
   }
@@ -240,17 +330,23 @@ class _CollectionPageState extends State<CollectionPage> {
           value: _sortBy,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down),
-          items: ['Featured', 'Price: Low to High', 'Price: High to Low', 'Newest', 'Best Selling']
-              .map((String value) {
+          items: [
+            'Featured',
+            'Price: Low to High',
+            'Price: High to Low',
+            'Newest',
+            'Best Selling'
+          ].map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value, style: const TextStyle(fontSize: 14)),
             );
           }).toList(),
           onChanged: (String? newValue) {
-            setState(() {
-              _sortBy = newValue!;
-            });
+            if (newValue != null) {
+              _sortBy = newValue;
+              _applyFiltersAndSort();
+            }
           },
         ),
       ),
@@ -269,17 +365,17 @@ class _CollectionPageState extends State<CollectionPage> {
           value: _sizeFilter,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down),
-          items: ['All Sizes', 'XS', 'S', 'M', 'L', 'XL', 'XXL']
-              .map((String value) {
+          items: _availableSizes.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value, style: const TextStyle(fontSize: 14)),
             );
           }).toList(),
           onChanged: (String? newValue) {
-            setState(() {
-              _sizeFilter = newValue!;
-            });
+            if (newValue != null) {
+              _sizeFilter = newValue;
+              _applyFiltersAndSort();
+            }
           },
         ),
       ),
@@ -298,17 +394,17 @@ class _CollectionPageState extends State<CollectionPage> {
           value: _colorFilter,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down),
-          items: ['All Colors', 'Black', 'White', 'Navy', 'Grey', 'Red', 'Blue']
-              .map((String value) {
+          items: _availableColors.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value, style: const TextStyle(fontSize: 14)),
             );
           }).toList(),
           onChanged: (String? newValue) {
-            setState(() {
-              _colorFilter = newValue!;
-            });
+            if (newValue != null) {
+              _colorFilter = newValue;
+              _applyFiltersAndSort();
+            }
           },
         ),
       ),
@@ -327,34 +423,127 @@ class _CollectionPageState extends State<CollectionPage> {
           value: _priceFilter,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down),
-          items: ['All Prices', 'Under £20', '£20 - £40', '£40 - £60', 'Over £60']
-              .map((String value) {
+          items: [
+            'All Prices',
+            'Under £20',
+            '£20 - £40',
+            '£40 - £60',
+            'Over £60'
+          ].map((String value) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value, style: const TextStyle(fontSize: 14)),
             );
           }).toList(),
           onChanged: (String? newValue) {
-            setState(() {
-              _priceFilter = newValue!;
-            });
+            if (newValue != null) {
+              _priceFilter = newValue;
+              _applyFiltersAndSort();
+            }
           },
         ),
       ),
     );
   }
 
+  Widget _buildActiveFilters() {
+    List<String> activeFilters = [];
+    if (_sizeFilter != 'All Sizes') activeFilters.add(_sizeFilter);
+    if (_colorFilter != 'All Colors') activeFilters.add(_colorFilter);
+    if (_priceFilter != 'All Prices') activeFilters.add(_priceFilter);
+
+    if (activeFilters.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Text(
+              'Active Filters:',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ...activeFilters.map((filter) => Chip(
+                        label: Text(
+                          filter,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        deleteIcon: const Icon(Icons.close, size: 16),
+                        onDeleted: () {
+                          setState(() {
+                            if (_availableSizes.contains(filter)) {
+                              _sizeFilter = 'All Sizes';
+                            } else if (_availableColors.contains(filter)) {
+                              _colorFilter = 'All Colors';
+                            } else {
+                              _priceFilter = 'All Prices';
+                            }
+                            _applyFiltersAndSort();
+                          });
+                        },
+                        backgroundColor: Colors.blue.shade50,
+                        deleteIconColor: Colors.blue.shade700,
+                        labelStyle: TextStyle(color: Colors.blue.shade700),
+                      )),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _sizeFilter = 'All Sizes';
+                        _colorFilter = 'All Colors';
+                        _priceFilter = 'All Prices';
+                        _sortBy = 'Featured';
+                        _applyFiltersAndSort();
+                      });
+                    },
+                    icon: const Icon(Icons.clear_all, size: 16),
+                    label: const Text('Clear All', style: TextStyle(fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      minimumSize: const Size(0, 32),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildResultsInfo() {
+    final startItem = _filteredProducts.isEmpty
+        ? 0
+        : (_currentPage - 1) * _itemsPerPage + 1;
+    final endItem = _currentPage * _itemsPerPage > _filteredProducts.length
+        ? _filteredProducts.length
+        : _currentPage * _itemsPerPage;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Showing ${_products.length} results',
+            _filteredProducts.isEmpty
+                ? 'No products found'
+                : 'Showing $startItem-$endItem of ${_filteredProducts.length} products',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: Colors.grey.shade700,
               fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
           Row(
@@ -363,11 +552,13 @@ class _CollectionPageState extends State<CollectionPage> {
                 icon: const Icon(Icons.grid_view, size: 22),
                 color: Colors.blue.shade700,
                 onPressed: () {},
+                tooltip: 'Grid View',
               ),
               IconButton(
                 icon: const Icon(Icons.view_list, size: 22),
                 color: Colors.grey,
                 onPressed: () {},
+                tooltip: 'List View',
               ),
             ],
           ),
@@ -377,6 +568,55 @@ class _CollectionPageState extends State<CollectionPage> {
   }
 
   Widget _buildProductsGrid() {
+    if (_filteredProducts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(60),
+        child: Column(
+          children: [
+            Icon(
+              Icons.shopping_bag_outlined,
+              size: 80,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No products match your filters',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Try adjusting your filters or clearing them',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _sizeFilter = 'All Sizes';
+                  _colorFilter = 'All Colors';
+                  _priceFilter = 'All Prices';
+                  _sortBy = 'Featured';
+                  _applyFiltersAndSort();
+                });
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reset Filters'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade700,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: LayoutBuilder(
@@ -397,9 +637,9 @@ class _CollectionPageState extends State<CollectionPage> {
               mainAxisSpacing: 15,
               childAspectRatio: 0.7,
             ),
-            itemCount: _products.length,
+            itemCount: _paginatedProducts.length,
             itemBuilder: (context, index) {
-              final product = _products[index];
+              final product = _paginatedProducts[index];
               return _buildProductCard(product);
             },
           );
@@ -408,7 +648,7 @@ class _CollectionPageState extends State<CollectionPage> {
     );
   }
 
-  Widget _buildProductCard(Map<String, dynamic> product) {
+  Widget _buildProductCard(Product product) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -417,7 +657,7 @@ class _CollectionPageState extends State<CollectionPage> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, '/product', arguments: product['name']);
+          Navigator.pushNamed(context, '/product', arguments: product.id);
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -428,7 +668,7 @@ class _CollectionPageState extends State<CollectionPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    product['image'],
+                    product.images.first,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -437,7 +677,7 @@ class _CollectionPageState extends State<CollectionPage> {
                       );
                     },
                   ),
-                  if (product['isOnSale'])
+                  if (product.isOnSale)
                     Positioned(
                       top: 10,
                       left: 10,
@@ -450,12 +690,28 @@ class _CollectionPageState extends State<CollectionPage> {
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          'SALE',
-                          style: TextStyle(
+                        child: Text(
+                          '-${product.discountPercentage}%',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (!product.inStock)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        child: const Center(
+                          child: Text(
+                            'OUT OF STOCK',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ),
@@ -485,38 +741,87 @@ class _CollectionPageState extends State<CollectionPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      product['name'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Row(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '£${product['price'].toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: product['isOnSale']
-                                ? Colors.red
-                                : Colors.blue.shade700,
+                          product.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (product['originalPrice'] != null) ...[
-                          const SizedBox(width: 8),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.star, size: 14, color: Colors.amber),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${product.rating}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            Text(
+                              ' (${product.reviewCount})',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (product.originalPrice != null)
                           Text(
-                            '£${product['originalPrice'].toStringAsFixed(2)}',
+                            '£${product.originalPrice!.toStringAsFixed(2)}',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               color: Colors.grey.shade500,
                               decoration: TextDecoration.lineThrough,
                             ),
                           ),
-                        ],
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '£${product.price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: product.isOnSale
+                                    ? Colors.red
+                                    : Colors.blue.shade700,
+                              ),
+                            ),
+                            if (product.isOnSale && product.originalPrice != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Save £${product.savings.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ],
@@ -530,36 +835,88 @@ class _CollectionPageState extends State<CollectionPage> {
   }
 
   Widget _buildPagination() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left),
-          onPressed: () {},
-          color: Colors.grey,
-        ),
-        _buildPageNumber(1, isActive: true),
-        _buildPageNumber(2),
-        _buildPageNumber(3),
-        const Text('...'),
-        _buildPageNumber(10),
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          onPressed: () {},
-          color: Colors.blue.shade700,
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: _currentPage > 1
+                ? () {
+                    setState(() {
+                      _currentPage--;
+                    });
+                    // Scroll to top
+                    Scrollable.ensureVisible(
+                      context,
+                      duration: const Duration(milliseconds: 300),
+                    );
+                  }
+                : null,
+            color: _currentPage > 1 ? Colors.blue.shade700 : Colors.grey,
+          ),
+          ..._buildPageNumbers(),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: _currentPage < _totalPages
+                ? () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                    // Scroll to top
+                    Scrollable.ensureVisible(
+                      context,
+                      duration: const Duration(milliseconds: 300),
+                    );
+                  }
+                : null,
+            color: _currentPage < _totalPages ? Colors.blue.shade700 : Colors.grey,
+          ),
+        ],
+      ),
     );
+  }
+
+  List<Widget> _buildPageNumbers() {
+    List<Widget> pageButtons = [];
+
+    for (int i = 1; i <= _totalPages; i++) {
+      if (i == 1 ||
+          i == _totalPages ||
+          (i >= _currentPage - 1 && i <= _currentPage + 1)) {
+        pageButtons.add(_buildPageNumber(i, isActive: i == _currentPage));
+      } else if (i == _currentPage - 2 || i == _currentPage + 2) {
+        pageButtons.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text('...'),
+          ),
+        );
+      }
+    }
+
+    return pageButtons;
   }
 
   Widget _buildPageNumber(int number, {bool isActive = false}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          setState(() {
+            _currentPage = number;
+          });
+          // Scroll to top
+          Scrollable.ensureVisible(
+            context,
+            duration: const Duration(milliseconds: 300),
+          );
+        },
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          width: 36,
-          height: 36,
+          width: 40,
+          height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isActive ? Colors.blue.shade700 : Colors.transparent,
@@ -578,5 +935,13 @@ class _CollectionPageState extends State<CollectionPage> {
         ),
       ),
     );
+  }
+
+  Color _hexToColor(String hex) {
+    hex = hex.replaceAll('#', '');
+    if (hex.length == 6) {
+      hex = 'FF$hex';
+    }
+    return Color(int.parse(hex, radix: 16));
   }
 }
