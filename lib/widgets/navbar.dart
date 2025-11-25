@@ -56,59 +56,60 @@ class Navbar extends StatelessWidget {
 
   Widget _buildDesktopNavbar(BuildContext context, CartService cartService) {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
+  height: 70, // fixes the white gap issue
+  color: Colors.white,
+  padding: const EdgeInsets.symmetric(horizontal: 24),
+  child: Row(
+    children: [
+      InkWell(
+        onTap: () => _navigateTo(context, '/'),
+        child: const Text(
+          'UNION SHOP',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      const SizedBox(width: 40),
+      Expanded(
+        child: Row(
+          children: [
+            _buildNavLink(context, 'Home', '/'),
+            _buildNavLink(context, 'Collections', '/collections'),
+            _buildNavLink(context, 'Sale', '/sale'),
+            _buildNavLink(context, 'Print Shack', '/print-shack'),
+            _buildNavLink(context, 'About Us', '/about'),
+          ],
+        ),
+      ),
+      Row(
         children: [
-          InkWell(
-            onTap: () => _navigateTo(context, '/'),
-            child: const Text(
-              'UNION SHOP',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => _navigateTo(context, '/search'),
+            tooltip: 'Search',
           ),
-          const SizedBox(width: 40),
-          Expanded(
-            child: Row(
-              children: [
-                _buildNavLink(context, 'Home', '/'),
-                _buildNavLink(context, 'Collections', '/collections'),
-                _buildNavLink(context, 'Sale', '/sale'),
-                _buildNavLink(context, 'Print Shack', '/print-shack'),
-                _buildNavLink(context, 'About Us', '/about'),
-              ],
-            ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              final authService = AuthService();
+              if (authService.isLoggedIn) {
+                _navigateTo(context, '/account-dashboard');
+              } else {
+                _navigateTo(context, '/auth');
+              }
+            },
+            tooltip: 'Account',
           ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () => _navigateTo(context, '/search'),
-                tooltip: 'Search',
-              ),
-              IconButton(
-                icon: const Icon(Icons.person),
-                onPressed: (){
-                  final authService = AuthService();
-                  if (authService.isLoggedIn) {
-                    _navigateTo(context, '/account-dashboard');
-                  } else {
-                    _navigateTo(context, '/auth');
-                  }
-                },
-                tooltip: 'Account',
-              ), 
-              _buildCartIcon(context, cartService),
-            ],
-          ),
+          _buildCartIcon(context, cartService),
         ],
       ),
-    );
-  }
+    ],
+  ),
+);
 
+}
   Widget _buildNavLink(BuildContext context, String title, String route) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final isActive = currentRoute == route;
