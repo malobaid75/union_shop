@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
+import '../services/auth_service.dart';
+
 
 class Navbar extends StatelessWidget {
   const Navbar({super.key});
@@ -89,9 +91,16 @@ class Navbar extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.person),
-                onPressed: () => _navigateTo(context, '/auth'),
+                onPressed: (){
+                  final authService = AuthService();
+                  if (authService.isLoggedIn) {
+                    _navigateTo(context, '/account-dashboard');
+                  } else {
+                    _navigateTo(context, '/auth');
+                  }
+                },
                 tooltip: 'Account',
-              ),
+              ), 
               _buildCartIcon(context, cartService),
             ],
           ),
