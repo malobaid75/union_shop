@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import '../widgets/navbar.dart';
 import '../widgets/mobile_drawer.dart';
 import '../widgets/footer.dart';
+import '../services/data_service.dart';
+import '../models/collection.dart';
+import '../models/product.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final dataService = DataService();
+    
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -17,17 +22,17 @@ class HomePage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHeroBanner(),
+            _buildHeroBanner(context),
             const SizedBox(height: 40),
             _buildSectionTitle('Featured Collections'),
             const SizedBox(height: 20),
-            _buildFeaturedCollections(),
+            _buildFeaturedCollections(context, dataService),
             const SizedBox(height: 40),
             _buildSectionTitle('Popular Products'),
             const SizedBox(height: 20),
-            _buildPopularProducts(),
+            _buildPopularProducts(context, dataService),
             const SizedBox(height: 40),
-            _buildPromoBanner(),
+            _buildPromoBanner(context),
             const SizedBox(height: 40),
             const Footer(),
           ],
@@ -36,7 +41,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroBanner() {
+  Widget _buildHeroBanner(BuildContext context) {
     return Container(
       height: 400,
       width: double.infinity,
@@ -87,7 +92,9 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/collections');
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.blue.shade700,
@@ -129,12 +136,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturedCollections() {
-    final collections = [
-      {'name': 'Clothing', 'image': 'https://via.placeholder.com/300x200'},
-      {'name': 'Accessories', 'image': 'https://via.placeholder.com/300x200'},
-      {'name': 'Stationery', 'image': 'https://via.placeholder.com/300x200'},
-    ];
+  Widget _buildFeaturedCollections(BuildContext context, DataService dataService) {
+    // Get first 6 collections
+    final collections = dataService.getCollections().take(6).toList();
 
     return SizedBox(
       height: 250,
@@ -144,16 +148,15 @@ class HomePage extends StatelessWidget {
         itemCount: collections.length,
         itemBuilder: (context, index) {
           final collection = collections[index];
-          return _buildCollectionCard(
-            collection['name']!,
-            collection['image']!,
-          );
+          return _buildCollectionCard(context, collection);
         },
       ),
     );
   }
 
-  Widget _buildCollectionCard(String name, String imageUrl) {
+  Widget _buildCollectionCard(BuildContext context, Collection collection) {
+    final productCount = DataService().getProductsByCollection(collection.id).length;
+    
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 15),
@@ -162,66 +165,72 @@ class HomePage extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.image, size: 50),
-                    );
-                  },
+        child: InkWell(
+          onTap: () {
+            // Navigate to collection page
+            Navigator.pushNamed(
+              context,
+              '/collection',
+              arguments: collection.name,
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  child: Image.network(
+                    collection.image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.image, size: 50),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      collection.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$productCount items',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPopularProducts() {
-    final products = [
-      {
-        'name': 'University Hoodie',
-        'price': '£35.00',
-        'image': 'https://via.placeholder.com/200x200'
-      },
-      {
-        'name': 'Campus T-Shirt',
-        'price': '£18.00',
-        'image': 'https://via.placeholder.com/200x200'
-      },
-      {
-        'name': 'Branded Mug',
-        'price': '£8.00',
-        'image': 'https://via.placeholder.com/200x200'
-      },
-      {
-        'name': 'Notebook Set',
-        'price': '£12.00',
-        'image': 'https://via.placeholder.com/200x200'
-      },
-    ];
+  Widget _buildPopularProducts(BuildContext context, DataService dataService) {
+    // Get products sorted by reviews (most popular)
+    final products = dataService.sortProducts(
+      dataService.getProducts(),
+      'Best Selling',
+    ).take(8).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -241,11 +250,7 @@ class HomePage extends StatelessWidget {
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
-              return _buildProductCard(
-                product['name']!,
-                product['price']!,
-                product['image']!,
-              );
+              return _buildProductCard(context, product);
             },
           ),
         );
@@ -253,64 +258,115 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(String name, String price, String imageUrl) {
+  Widget _buildProductCard(BuildContext context, Product product) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.shopping_bag, size: 40),
-                  );
-                },
+      child: InkWell(
+        onTap: () {
+          // Navigate to product page
+          Navigator.pushNamed(context, '/product', arguments: product.id);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      product.images.first,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade300,
+                          child: const Icon(Icons.shopping_bag, size: 40),
+                        );
+                      },
+                    ),
+                  ),
+                  if (product.isOnSale)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '-${product.discountPercentage}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  price,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      if (product.originalPrice != null) ...[
+                        Text(
+                          '£${product.originalPrice!.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                      ],
+                      Text(
+                        '£${product.price.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: product.isOnSale
+                              ? Colors.red
+                              : Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPromoBanner() {
+  Widget _buildPromoBanner(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(30),
@@ -345,7 +401,10 @@ class HomePage extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              // Navigate to sale page
+              Navigator.pushNamed(context,'/sale');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.orange.shade400,
@@ -356,7 +415,10 @@ class HomePage extends StatelessWidget {
             ),
             child: const Text(
               'SHOP SALE',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

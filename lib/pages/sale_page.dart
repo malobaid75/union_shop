@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../widgets/navbar.dart';
 import '../widgets/mobile_drawer.dart';
 import '../widgets/footer.dart';
+import '../services/data_service.dart';
+import '../models/product.dart';
 
 class SalePage extends StatefulWidget {
   const SalePage({super.key});
@@ -11,80 +14,47 @@ class SalePage extends StatefulWidget {
 }
 
 class _SalePageState extends State<SalePage> {
-  String _sortBy = 'Biggest Discount';
+  final DataService _dataService = DataService();
 
-  final List<Map<String, dynamic>> _saleProducts = [
-    {
-      'name': 'University Hoodie',
-      'price': 35.00,
-      'originalPrice': 45.00,
-      'discount': 22,
-      'image': 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Hoodie',
-    },
-    {
-      'name': 'Varsity Jacket',
-      'price': 55.00,
-      'originalPrice': 70.00,
-      'discount': 21,
-      'image': 'https://via.placeholder.com/300x300/8E44AD/FFFFFF?text=Jacket',
-    },
-    {
-      'name': 'Zip-Up Hoodie',
-      'price': 40.00,
-      'originalPrice': 50.00,
-      'discount': 20,
-      'image': 'https://via.placeholder.com/300x300/C0392B/FFFFFF?text=Zip+Hoodie',
-    },
-    {
-      'name': 'Premium Backpack',
-      'price': 32.00,
-      'originalPrice': 45.00,
-      'discount': 29,
-      'image': 'https://via.placeholder.com/300x300/27AE60/FFFFFF?text=Backpack',
-    },
-    {
-      'name': 'Winter Beanie',
-      'price': 10.00,
-      'originalPrice': 15.00,
-      'discount': 33,
-      'image': 'https://via.placeholder.com/300x300/E74C3C/FFFFFF?text=Beanie',
-    },
-    {
-      'name': 'Sports Water Bottle',
-      'price': 8.00,
-      'originalPrice': 12.00,
-      'discount': 33,
-      'image': 'https://via.placeholder.com/300x300/16A085/FFFFFF?text=Bottle',
-    },
-    {
-      'name': 'Campus Polo Shirt',
-      'price': 20.00,
-      'originalPrice': 28.00,
-      'discount': 29,
-      'image': 'https://via.placeholder.com/300x300/F39C12/FFFFFF?text=Polo',
-    },
-    {
-      'name': 'Laptop Sleeve',
-      'price': 18.00,
-      'originalPrice': 25.00,
-      'discount': 28,
-      'image': 'https://via.placeholder.com/300x300/9B59B6/FFFFFF?text=Sleeve',
-    },
-    {
-      'name': 'Gym Shorts',
-      'price': 15.00,
-      'originalPrice': 22.00,
-      'discount': 32,
-      'image': 'https://via.placeholder.com/300x300/3498DB/FFFFFF?text=Shorts',
-    },
-    {
-      'name': 'University Scarf',
-      'price': 12.00,
-      'originalPrice': 18.00,
-      'discount': 33,
-      'image': 'https://via.placeholder.com/300x300/E67E22/FFFFFF?text=Scarf',
-    },
-  ];
+  String _sortBy = 'Biggest Discount';
+  List<Product> _saleProducts = [];
+  List<Product> _filteredProducts = [];
+
+  late DateTime saleEndDate;
+  Timer? countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Sale ends in 2 months from today
+    saleEndDate = DateTime.now().add(const Duration(days: 60));
+
+    // Refresh countdown every second
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {});
+    });
+
+    _loadSaleProducts();
+  }
+
+  @override
+  void dispose() {
+    countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  // Load sale products
+  void _loadSaleProducts() {
+    _saleProducts = _dataService.getSaleProducts();
+    _applySort();
+  }
+
+  // Sorting
+  void _applySort() {
+    _filteredProducts = _dataService.sortProducts(_saleProducts, _sortBy);
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +81,13 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
+  // HERO BANNER
   Widget _buildSaleHero() {
+    final totalSavings = _saleProducts.fold<double>(
+      0.0,
+      (sum, product) => sum + product.savings,
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
@@ -150,9 +126,9 @@ class _SalePageState extends State<SalePage> {
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'UP TO 50% OFF',
-            style: TextStyle(
+          Text(
+            'UP TO ${_getMaxDiscount()}% OFF',
+            style: const TextStyle(
               color: Colors.yellow,
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -160,7 +136,7 @@ class _SalePageState extends State<SalePage> {
           ),
           const SizedBox(height: 15),
           Text(
-            'Shop amazing deals on university merchandise',
+            '${_saleProducts.length} products on sale • Save up to £${totalSavings.toStringAsFixed(2)}',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 16,
@@ -171,7 +147,24 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
+  // Max discount
+  int _getMaxDiscount() {
+    if (_saleProducts.isEmpty) return 0;
+    return _saleProducts
+        .map((p) => p.discountPercentage)
+        .reduce((a, b) => a > b ? a : b);
+  }
+
+  // COUNTDOWN
   Widget _buildCountdownBanner() {
+    final now = DateTime.now();
+    final diff = saleEndDate.difference(now);
+
+    final days = diff.inDays;
+    final hours = diff.inHours % 24;
+    final mins = diff.inMinutes % 60;
+    final secs = diff.inSeconds % 60;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
@@ -190,13 +183,13 @@ class _SalePageState extends State<SalePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildCountdownBox('02', 'DAYS'),
+              _buildCountdownBox(days.toString().padLeft(2, '0'), 'DAYS'),
               _buildCountdownSeparator(),
-              _buildCountdownBox('14', 'HOURS'),
+              _buildCountdownBox(hours.toString().padLeft(2, '0'), 'HOURS'),
               _buildCountdownSeparator(),
-              _buildCountdownBox('36', 'MINS'),
+              _buildCountdownBox(mins.toString().padLeft(2, '0'), 'MINS'),
               _buildCountdownSeparator(),
-              _buildCountdownBox('22', 'SECS'),
+              _buildCountdownBox(secs.toString().padLeft(2, '0'), 'SECS'),
             ],
           ),
         ],
@@ -247,6 +240,7 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
+  // FILTER BAR
   Widget _buildFiltersBar() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -254,7 +248,7 @@ class _SalePageState extends State<SalePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            '${_saleProducts.length} items on sale',
+            '${_filteredProducts.length} items on sale',
             style: TextStyle(
               color: Colors.grey.shade700,
               fontSize: 14,
@@ -282,9 +276,12 @@ class _SalePageState extends State<SalePage> {
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
-                  setState(() {
-                    _sortBy = newValue!;
-                  });
+                  if (newValue != null) {
+                    setState(() {
+                      _sortBy = newValue;
+                      _applySort();
+                    });
+                  }
                 },
               ),
             ),
@@ -294,7 +291,31 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
+  // PRODUCTS GRID
   Widget _buildSaleProductsGrid() {
+    if (_filteredProducts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(60),
+        child: Column(
+          children: [
+            Icon(
+              Icons.local_offer_outlined,
+              size: 80,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No sale items available',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: LayoutBuilder(
@@ -315,9 +336,9 @@ class _SalePageState extends State<SalePage> {
               mainAxisSpacing: 15,
               childAspectRatio: 0.65,
             ),
-            itemCount: _saleProducts.length,
+            itemCount: _filteredProducts.length,
             itemBuilder: (context, index) {
-              final product = _saleProducts[index];
+              final product = _filteredProducts[index];
               return _buildSaleProductCard(product);
             },
           );
@@ -326,7 +347,8 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
-  Widget _buildSaleProductCard(Map<String, dynamic> product) {
+  // PRODUCT CARD
+  Widget _buildSaleProductCard(Product product) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(
@@ -335,7 +357,7 @@ class _SalePageState extends State<SalePage> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, '/product', arguments: product['name']);
+          Navigator.pushNamed(context, '/product', arguments: product.id);
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -346,7 +368,7 @@ class _SalePageState extends State<SalePage> {
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    product['image'],
+                    product.images.first,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -355,6 +377,8 @@ class _SalePageState extends State<SalePage> {
                       );
                     },
                   ),
+
+                  // Discount badge (fixed)
                   Positioned(
                     top: 10,
                     left: 10,
@@ -368,7 +392,7 @@ class _SalePageState extends State<SalePage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '-${product['discount']}%',
+                        '-${product.discountPercentage.clamp(0, 100)}%',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
@@ -377,6 +401,7 @@ class _SalePageState extends State<SalePage> {
                       ),
                     ),
                   ),
+
                   Positioned(
                     top: 10,
                     right: 10,
@@ -394,6 +419,7 @@ class _SalePageState extends State<SalePage> {
                 ],
               ),
             ),
+
             Expanded(
               flex: 2,
               child: Padding(
@@ -403,7 +429,7 @@ class _SalePageState extends State<SalePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      product['name'],
+                      product.name,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -414,20 +440,21 @@ class _SalePageState extends State<SalePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '£${product['originalPrice'].toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade500,
-                            decoration: TextDecoration.lineThrough,
+                        if (product.originalPrice != null)
+                          Text(
+                            '£${product.originalPrice!.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade500,
+                              decoration: TextDecoration.lineThrough,
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 2),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '£${product['price'].toStringAsFixed(2)}',
+                              '£${product.price.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -444,7 +471,7 @@ class _SalePageState extends State<SalePage> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                'SAVE £${(product['originalPrice'] - product['price']).toStringAsFixed(2)}',
+                                'SAVE £${product.savings.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
@@ -466,6 +493,7 @@ class _SalePageState extends State<SalePage> {
     );
   }
 
+  // PROMO BANNER
   Widget _buildPromoBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -536,7 +564,14 @@ class _SalePageState extends State<SalePage> {
 
   Widget _buildPromoButton() {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Code STUDENT10 copied to clipboard!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: Colors.purple.shade700,
