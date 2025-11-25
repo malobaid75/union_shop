@@ -136,23 +136,23 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturedCollections(BuildContext context, DataService dataService) {
-    // Get first 6 collections
-    final collections = dataService.getCollections().take(6).toList();
+ Widget _buildFeaturedCollections(BuildContext context, DataService dataService) {
+  // Get first 4 collections
+  final collections = dataService.getCollections().take(4).toList();
 
-    return SizedBox(
-      height: 250,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: collections.length,
-        itemBuilder: (context, index) {
-          final collection = collections[index];
+  return SizedBox(
+    height: 250,
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: collections.map((collection) {
           return _buildCollectionCard(context, collection);
-        },
+        }).toList(),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCollectionCard(BuildContext context, Collection collection) {
     final productCount = DataService().getProductsByCollection(collection.id).length;
@@ -292,9 +292,9 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   if (product.isOnSale)
-                    Positioned(
+                   Positioned(
                       top: 8,
-                      left: 8,
+                      right: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
