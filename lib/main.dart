@@ -7,6 +7,7 @@ import 'pages/product_page.dart';
 import 'pages/sale_page.dart';
 import 'pages/auth_page.dart';
 import 'pages/cart_page.dart';
+import 'pages/print_shack_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         '/auth': (context) => const AuthPage(),
         '/account': (context) => const AuthPage(),
         '/cart': (context) => const CartPage(),
+        '/print-shack': (context) => const PrintShackPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/collection') {
