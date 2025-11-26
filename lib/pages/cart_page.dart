@@ -4,6 +4,7 @@ import '../widgets/mobile_drawer.dart';
 import '../widgets/footer.dart';
 import '../services/cart_service.dart';
 import '../models/cart_item.dart';
+import '../services/auth_service.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -480,7 +481,54 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  void _handleCheckout() {
+// Handle checkout - place order in Firestore
+void _handleCheckout() async {
+  // Check if user is logged in
+  if (!AuthService().isLoggedIn) {
+    // Show dialog to sign in
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign In Required'),
+        content: const Text(
+          'Please sign in to your account to place an order.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/auth');
+            },
+            child: const Text('Sign In'),
+          ),
+        ],
+      ),
+    );
+    return;
+  }
+
+  // Show loading dialog
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+
+  // Place order
+  final result = await _cartService.placeOrder();
+
+  // Close loading dialog
+  if (!mounted) return;
+  Navigator.pop(context);
+
+  if (result['success']) {
+    // Show success dialog
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -498,13 +546,11 @@ class _CartPageState extends State<CartPage> {
             const Text('Thank you for your order!'),
             const SizedBox(height: 10),
             Text(
-              'Order Total: £${_cartService.total.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Items: ${_cartService.itemCount}',
-              style: TextStyle(color: Colors.grey.shade600),
+              'Order ID: ${result['orderId']}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
             ),
             const SizedBox(height: 15),
             const Text(
@@ -517,7 +563,6 @@ class _CartPageState extends State<CartPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _cartService.clearCart();
               Navigator.pushReplacementNamed(context, '/');
             },
             child: const Text('GO TO HOME'),
@@ -525,7 +570,7 @@ class _CartPageState extends State<CartPage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _cartService.clearCart();
+              Navigator.pushReplacementNamed(context, '/account-dashboard');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green.shade700,
@@ -535,6 +580,14 @@ class _CartPageState extends State<CartPage> {
         ],
       ),
     );
+  } else {
+    // Show error dialog
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result['message']),
+        backgroundColor: Colors.red,
+    ),
+    );
+  }
   }
 }
-     

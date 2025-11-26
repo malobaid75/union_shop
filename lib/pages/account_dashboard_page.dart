@@ -3,6 +3,7 @@ import '../widgets/navbar.dart';
 import '../widgets/mobile_drawer.dart';
 import '../widgets/footer.dart';
 import '../services/auth_service.dart';
+import '../services/cart_service.dart';
 
 class AccountDashboardPage extends StatefulWidget {
   const AccountDashboardPage({super.key});
@@ -15,12 +16,16 @@ class _AccountDashboardPageState extends State<AccountDashboardPage> {
   final AuthService _authService = AuthService();
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
+  int _orderCount = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
+
+@override
+void initState() {
+  super.initState();
+  _loadUserData();
+  _loadOrderCount();
+}
+
 
   /// Load user data from Firestore
   Future<void> _loadUserData() async {
@@ -30,6 +35,14 @@ class _AccountDashboardPageState extends State<AccountDashboardPage> {
       _isLoading = false;
     });
   }
+
+  Future<void> _loadOrderCount() async {
+  final orders = await CartService().getUserOrders();
+  setState(() {
+    _orderCount = orders.length;
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +190,7 @@ Widget _buildDashboardContent() {
               return Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard('Orders', '0', Icons.shopping_bag),
+                    child: _buildStatCard('Orders', '$_orderCount', Icons.shopping_bag),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
@@ -192,7 +205,7 @@ Widget _buildDashboardContent() {
             } else {
               return Column(
                 children: [
-                  _buildStatCard('Orders', '0', Icons.shopping_bag),
+                  _buildStatCard('Orders', '$_orderCount', Icons.shopping_bag),
                   const SizedBox(height: 15),
                   _buildStatCard('Wishlist', '0', Icons.favorite),
                   const SizedBox(height: 15),
@@ -219,11 +232,7 @@ Widget _buildDashboardContent() {
           'View Orders',
           Icons.receipt_long,
           () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Orders page coming soon!'),
-              ),
-            );
+            Navigator.pushNamed(context, '/orders');
           },
         ),
         const SizedBox(height: 10),

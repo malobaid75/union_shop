@@ -12,6 +12,7 @@ import 'pages/auth_page.dart';
 import 'pages/cart_page.dart';
 import 'pages/print_shack_page.dart';
 import 'pages/account_dashboard_page.dart';
+import 'pages/orders_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
         '/cart': (context) => const CartPage(),
         '/print-shack': (context) => const PrintShackPage(),
         '/account-dashboard': (context) => const AccountDashboardPage(),
+        '/orders': (context) => const OrdersPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/collection') {
