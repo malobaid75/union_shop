@@ -188,53 +188,68 @@ class Footer extends StatelessWidget {
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'SEARCH',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+  final searchController = TextEditingController();
+  
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'SEARCH',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
         ),
-        const SizedBox(height: 15),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Search products...',
-                    hintStyle: TextStyle(color: Colors.grey.shade500),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  ),
-                  onSubmitted: (value) {
-                    if (value.isNotEmpty) {
-                      Navigator.pushNamed(context, '/search', arguments: value);
-                    }
-                  },
+      ),
+      const SizedBox(height: 15),
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade800,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: searchController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  hintStyle: TextStyle(color: Colors.grey.shade500),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.search, color: Colors.white),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/search');
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    Navigator.pushNamed(
+                      context,
+                      '/search',
+                      arguments: value,
+                    );
+                  }
                 },
               ),
-            ],
-          ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () {
+                if (searchController.text.isNotEmpty) {
+                  Navigator.pushNamed(
+                    context,
+                    '/search',
+                    arguments: searchController.text,
+                  );
+                } else {
+                  Navigator.pushNamed(context, '/search');
+                }
+              },
+            ),
+          ],
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildSocialMedia() {
     return Column(

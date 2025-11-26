@@ -13,6 +13,7 @@ import 'pages/cart_page.dart';
 import 'pages/print_shack_page.dart';
 import 'pages/account_dashboard_page.dart';
 import 'pages/orders_page.dart';
+import 'pages/search_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,6 +77,13 @@ class MyApp extends StatelessWidget {
             builder: (context) => ProductPage(productId: productId),
           );
         }
+      if (settings.name == '/search') {
+          final query = settings.arguments as String?;
+          return MaterialPageRoute(
+          settings: settings,
+            builder: (context) => SearchPage(initialQuery: query),
+    );
+  }
 
         return null;
       },

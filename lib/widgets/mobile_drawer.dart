@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/cart_service.dart';
-
+import '../services/auth_service.dart';
 class MobileDrawer extends StatelessWidget {
   const MobileDrawer({super.key});
 
@@ -60,16 +60,11 @@ class MobileDrawer extends StatelessWidget {
           _buildDrawerItem(context, Icons.collections, 'Collections', '/collections'),
           _buildDrawerItem(context, Icons.local_offer, 'Sale', '/sale'),
           _buildDrawerItem(context, Icons.print, 'Print Shack', '/print-shack'),
-          const Divider(),
-          _buildDrawerSection('INFORMATION'),
           _buildDrawerItem(context, Icons.info, 'About Us', '/about'),
-          _buildDrawerItem(context, Icons.help_outline, 'Help Center', '/help'),
-          _buildDrawerItem(context, Icons.local_shipping, 'Shipping Info', '/shipping'),
-          _buildDrawerItem(context, Icons.assignment_return, 'Returns', '/returns'),
           const Divider(),
           _buildDrawerSection('ACCOUNT'),
           _buildDrawerItem(context, Icons.search, 'Search', '/search'),
-          _buildDrawerItem(context, Icons.person, 'Sign In / Register', '/auth'),
+           _buildDrawerCustomAccount(context),
           _buildCartItem(context, cartService),
         ],
       ),
@@ -166,4 +161,22 @@ class MobileDrawer extends StatelessWidget {
     },
   );
   }
+
+  Widget _buildDrawerCustomAccount(BuildContext context) {
+  return ListTile(
+    leading: const Icon(Icons.person),
+    title: const Text('Account'),
+    onTap: () {
+      Navigator.pop(context); // close drawer
+
+      final authService = AuthService();
+      if (authService.isLoggedIn) {
+        Navigator.pushNamed(context, '/account-dashboard');
+      } else {
+        Navigator.pushNamed(context, '/auth');
+      }
+    },
+  );
+}
+
 }

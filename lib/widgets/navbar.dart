@@ -47,7 +47,7 @@ class Navbar extends StatelessWidget {
       actions: [
         IconButton(
           icon: const Icon(Icons.search, color: Colors.black),
-          onPressed: () => _navigateTo(context, '/search'),
+            onPressed: () => Navigator.pushNamed(context, '/search'),
         ),
         _buildCartIcon(context, cartService),
       ],
@@ -87,7 +87,7 @@ class Navbar extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () => _navigateTo(context, '/search'),
+            onPressed: () => Navigator.pushNamed(context, '/search'),
             tooltip: 'Search',
           ),
           IconButton(
