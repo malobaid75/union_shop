@@ -59,58 +59,108 @@ class CartService extends ChangeNotifier {
   }
 
   /// Load cart from Firestore
-  Future<void> _loadCartFromFirestore() async {
-    if (!_authService.isLoggedIn) return;
+ Future<void> _loadCartFromFirestore() async {
+  if (!_authService.isLoggedIn) return;
 
-    try {
-      final doc = await _firestore
-          .collection('carts')
-          .doc(_authService.currentUser!.uid)
-          .get();
+  try {
+    final doc = await _firestore
+        .collection('carts')
+        .doc(_authService.currentUser!.uid)
+        .get();
 
-      if (doc.exists) {
-        final data = doc.data();
-        if (data != null && data['items'] != null) {
-          _items.clear();
-          notifyListeners();
+    if (doc.exists) {
+      final data = doc.data();
+      if (data != null && data['items'] != null) {
+        
+        _items.clear(); // clear old items
+
+        final List<dynamic> rawItems = data['items'];
+
+        for (var raw in rawItems) {
+          _items.add(_cartItemFromMap(raw));
         }
+
+        notifyListeners();
       }
-    } catch (e) {
-      debugPrint('Error loading cart from Firestore: $e');
     }
+  } catch (e) {
+    debugPrint('Error loading cart from Firestore: $e');
   }
+}
+
+CartItem _cartItemFromMap(Map<String, dynamic> data) {
+  return CartItem(
+    product: Product(
+      id: data['productId'],
+      name: data['productName'],
+      description: data['description'] ?? '',
+      price: (data['productPrice'] as num).toDouble(),
+      originalPrice: data['originalPrice'] != null
+          ? (data['originalPrice'] as num).toDouble()
+          : null,
+      images: List<String>.from(data['images'] ?? []),
+      sizes: List<String>.from(data['sizes'] ?? []),
+      colors: List<String>.from(data['colors'] ?? []),
+      category: data['category'] ?? '',
+      collectionId: data['collectionId'] ?? '',
+      isOnSale: data['isOnSale'] ?? false,
+      inStock: data['inStock'] ?? true,
+      sku: data['sku'] ?? '',
+      features: List<String>.from(data['features'] ?? []),
+      rating: (data['rating'] ?? 0).toDouble(),
+      reviewCount: data['reviewCount'] ?? 0,
+    ),
+    selectedSize: data['selectedSize'],
+    selectedColor: data['selectedColor'],
+    quantity: data['quantity'],
+  );
+}
+
+
 
   /// Save cart to Firestore
-  Future<void> _saveCartToFirestore() async {
-    if (!_authService.isLoggedIn) return;
+ Future<void> _saveCartToFirestore() async {
+  if (!_authService.isLoggedIn) return;
 
-    try {
-      // Convert cart items to serializable format
-      final cartData = {
-        'items': _items.map((item) => {
-          'productId': item.product.id,
-          'productName': item.product.name,
-          'productPrice': item.product.price,
-          'productImage': item.product.images.first,
-          'selectedSize': item.selectedSize,
-          'selectedColor': item.selectedColor,
-          'quantity': item.quantity,
-          'originalPrice': item.product.originalPrice,
-        }).toList(),
-        'subtotal': subtotal,
-        'total': total,
-        'itemCount': itemCount,
-        'lastUpdated': FieldValue.serverTimestamp(),
-      };
+  try {
+    final cartData = {
+      'items': _items.map((item) => {
+            'productId': item.product.id,
+            'productName': item.product.name,
+            'description': item.product.description,
+            'productPrice': item.product.price,
+            'originalPrice': item.product.originalPrice,
+            'images': item.product.images,
+            'sizes': item.product.sizes,
+            'colors': item.product.colors,
+            'category': item.product.category,
+            'collectionId': item.product.collectionId,
+            'isOnSale': item.product.isOnSale,
+            'inStock': item.product.inStock,
+            'sku': item.product.sku,
+            'features': item.product.features,
+            'rating': item.product.rating,
+            'reviewCount': item.product.reviewCount,
 
-      await _firestore
-          .collection('carts')
-          .doc(_authService.currentUser!.uid)
-          .set(cartData, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint('Error saving cart to Firestore: $e');
-    }
+            // cart-specific fields
+            'selectedSize': item.selectedSize,
+            'selectedColor': item.selectedColor,
+            'quantity': item.quantity,
+          }).toList(),
+      'subtotal': subtotal,
+      'total': total,
+      'itemCount': itemCount,
+      'lastUpdated': FieldValue.serverTimestamp(),
+    };
+
+    await _firestore
+        .collection('carts')
+        .doc(_authService.currentUser!.uid)
+        .set(cartData, SetOptions(merge: true));
+  } catch (e) {
+    debugPrint('Error saving cart to Firestore: $e');
   }
+}
 
   /// Add item to cart
   void addItem(Product product, String size, String color, {int quantity = 1}) {
