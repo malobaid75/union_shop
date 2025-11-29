@@ -56,12 +56,12 @@ class HomePage extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Opacity(
-              opacity: 0.1,
+              opacity: 0.35,
               child: Image.network(
-                'https://via.placeholder.com/800x400',
+                'https://picsum.photos/seed/unishop-banner-1/800/400',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return Container(color: Colors.blue.shade700);
+                  return Container(color: Colors.blue.shade500);
                 },
               ),
             ),

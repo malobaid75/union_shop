@@ -182,50 +182,90 @@ class _CollectionPageState extends State<CollectionPage> {
     );
   }
 
-  Widget _buildPageHeader() {
-    final accentColor = _hexToColor(_collection!.colorHex);
+ Widget _buildPageHeader() {
+  final accentColor = _hexToColor(_collection!.colorHex);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [accentColor, accentColor.withOpacity(0.7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  return Container(
+    width: double.infinity,
+    height: 320,
+    decoration: BoxDecoration(
+      image: DecorationImage(
+        image: NetworkImage(_collection!.image),
+        fit: BoxFit.cover,
+        colorFilter: ColorFilter.mode(
+          Colors.black.withOpacity(0.35),
+          BlendMode.darken,
         ),
       ),
-      child: Column(
-        children: [
-          Text(
-            _collection!.name.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _collection!.description,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 16,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 15),
-          Text(
-            '${_allProducts.length} products available',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
-            ),
-          ),
+      gradient: LinearGradient(
+        colors: [
+          accentColor.withOpacity(0.95),
+          accentColor.withOpacity(0.85),
+          accentColor.withOpacity(0.75),
+          Colors.white,
         ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
-    );
-  }
+    ),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                _collection!.name.toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 12),
+
+              Text(
+                _collection!.description,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 18),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.20),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "${_allProducts.length} products available",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.95),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 
   Widget _buildBreadcrumb() {
     return Container(

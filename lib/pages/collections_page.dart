@@ -126,45 +126,61 @@ class _CollectionsPageState extends State<CollectionsPage> {
     );
   }
 
-  Widget _buildPageHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.purple.shade700, Colors.purple.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+ Widget _buildPageHeader() {
+  return Stack(
+    children: [
+      // Background banner image
+      Positioned.fill(
+        child: Image.network(
+          'https://picsum.photos/seed/shop-collections/1600/500',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(color: Colors.purple.shade400);
+          },
         ),
       ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.collections_bookmark,
-            color: Colors.white,
-            size: 50,
-          ),
-          const SizedBox(height: 15),
-          const Text(
-            'COLLECTIONS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Browse our ${_collections.length} curated product collections',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 16,
-            ),
-          ),
-        ],
+
+      // Dark overlay for readability
+      Positioned.fill(
+        child: Container(
+          color: Colors.black.withOpacity(0.3),
+        ),
       ),
-    );
-  }
+
+      // Foreground title/content
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.collections_bookmark,
+              color: Colors.white,
+              size: 50,
+            ),
+            const SizedBox(height: 15),
+            const Text(
+              'COLLECTIONS',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Browse our ${_collections.length} curated product collections',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
 
   Widget _buildBreadcrumb() {
     return Container(
