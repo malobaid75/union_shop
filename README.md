@@ -2,6 +2,10 @@
 
 A full-featured e-commerce application for the University of Portsmouth Students' Union, built with Flutter and Firebase. This application allows students to browse and purchase university merchandise with features including authentication, shopping cart, product personalization, and order management.
 
+## Documentation
+- **[Requirements](REQUIREMENTS.md)** - Complete project requirements based on coursework specification
+- **[AI Usage](AI_PROMPTS.md)** - AI-driven development documentation
+- **[Deployment Guide](DEPLOYMENT.md)** - Firebase deployment instructions
 
 ## Live Demo
 
@@ -409,5 +413,7 @@ class CartItem {
 - University of Portsmouth Students' Union for project inspiration
 - Flutter documentation and community
 - Firebase documentation
+
+
 
 
