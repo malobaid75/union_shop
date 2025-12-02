@@ -206,6 +206,8 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 
 ---
 
+
+
 ## Getting Started
 
 ### Prerequisites
