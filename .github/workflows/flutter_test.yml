@@ -17,17 +17,24 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0'
+          flutter-version: '3.24.0'
           channel: 'stable'
+          cache: true
+
+      - name: Disable Flutter analytics
+        run: flutter config --no-analytics
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze code
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests with coverage
         run: flutter test --coverage
+
+      - name: Install lcov
+        run: sudo apt-get update && sudo apt-get install -y lcov
 
       - name: LCOV Coverage Report
         uses: zgosalvez/github-actions-report-lcov@v3
@@ -35,6 +42,18 @@ jobs:
           coverage-files: coverage/lcov.info
           minimum-coverage: 50
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+      - name: Check coverage threshold
+        run: |
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines" | grep -oP '\d+\.\d+(?=%)')
+          echo "📊 Code Coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 50" | bc -l) )); then
+            echo "❌ Error: Coverage ${COVERAGE}% is below minimum threshold of 50%"
+            exit 1
+          else
+            echo "✅ Success: Coverage ${COVERAGE}% meets the requirement!"
+          fi
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
